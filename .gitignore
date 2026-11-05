@@ -1,0 +1,5 @@
+/backend/.env.local
+/backend/.env
+/backend/config/jwt/*.pem
+/backend/vendor/
+/backend/var/
