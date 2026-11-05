@@ -1,9 +1,0 @@
-{
-    "require": {
-        "symfony/validator": "^8.1",
-        "symfony/rate-limiter": "^8.1",
-        "symfony/framework-bundle": "^8.1",
-        "symfony/routing": "^8.1",
-        "symfony/http-foundation": "^8.1"
-    }
-}

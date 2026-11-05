@@ -4,60 +4,96 @@ namespace App\Controller;
 
 use App\Document\User;
 use App\DTO\AccountUpdateRequest;
-use App\Exception\ApiException;
 use App\Service\ApiResponder;
-use App\Service\ApiView;
-use App\Service\JsonBody;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/api/users')]
 final class UserController extends AbstractController
 {
     public function __construct(
-        private readonly ApiResponder $responder,
-        private readonly ApiView $view,
-        private readonly JsonBody $jsonBody,
-        private readonly UserService $users
+        private readonly UserService $users,
+        private readonly ApiResponder $responder
     ) {
     }
 
     #[Route('/me', name: 'users_me', methods: ['GET'])]
-    public function show(): JsonResponse
+    public function me(): JsonResponse
     {
-        return $this->responder->success(['user' => $this->view->user($this->currentUser())]);
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $this->responder->success($user);
     }
 
     #[Route('/me', name: 'users_update_me', methods: ['PATCH'])]
-    public function update(Request $request): JsonResponse
+    public function updateMe(Request $request): JsonResponse
     {
-        $data = $this->jsonBody->decode($request);
-        if (array_diff(array_keys($data), ['name', 'email']) !== []) {
-            throw new ApiException(422, 'unknown_fields', 'The request contains unsupported fields.');
-        }
-        if ($data === []) {
-            throw new ApiException(422, 'validation_failed', 'At least one profile field must be provided.');
-        }
-        $user = $this->currentUser();
-        $name = array_key_exists('name', $data) ? $data['name'] : $user->getName();
-        $email = array_key_exists('email', $data) ? $data['email'] : $user->getEmail();
-        if (!is_string($name) || !is_string($email)) {
-            throw new ApiException(422, 'validation_failed', 'The submitted data is invalid.');
-        }
-        $input = new AccountUpdateRequest($name, $email);
-        $user = $this->users->update($user, $input);
-        return $this->responder->success(['user' => $this->view->user($user)]);
+        /** @var User $user */
+        $user = $this->getUser();
+
+        $input = $this->deserializeUpdateRequest($request);
+
+        $updatedUser = $this->users->update($user, $input);
+
+        return $this->responder->success($updatedUser);
     }
 
-    private function currentUser(): User
+    #[Route('', name: 'users_list', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function index(): JsonResponse
     {
-        $user = $this->getUser();
-        if (!$user instanceof User) {
-            throw new ApiException(401, 'unauthorized', 'Authentication is required.');
+        return $this->responder->success($this->users->findAll());
+    }
+
+    #[Route('/{id}', name: 'users_show', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function show(string $id): JsonResponse
+    {
+        return $this->responder->success($this->users->findById($id));
+    }
+
+    #[Route('/{id}', name: 'users_update', methods: ['PATCH'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function update(string $id, Request $request): JsonResponse
+    {
+        $user = $this->users->findById($id);
+        $input = $this->deserializeUpdateRequest($request);
+
+        $updatedUser = $this->users->update($user, $input);
+
+        return $this->responder->success($updatedUser);
+    }
+
+    #[Route('/{id}', name: 'users_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function delete(string $id): JsonResponse
+    {
+        $user = $this->users->findById($id);
+
+        $this->users->delete($user);
+
+        return $this->responder->success([
+            'message' => 'User deleted successfully.',
+        ]);
+    }
+
+    private function deserializeUpdateRequest(Request $request): AccountUpdateRequest
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!is_array($data)) {
+            throw new \InvalidArgumentException('Invalid JSON request body.');
         }
-        return $user;
+
+        $input = new AccountUpdateRequest();
+        $input->name = $data['name'] ?? '';
+        $input->email = $data['email'] ?? '';
+
+        return $input;
     }
 }

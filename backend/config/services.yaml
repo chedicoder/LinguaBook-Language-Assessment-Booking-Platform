@@ -3,7 +3,6 @@ services:
         autowire: true
         autoconfigure: true
         bind:
-            string $frontendOrigin: '%env(FRONTEND_ORIGIN)%'
             bool $cookieSecure: '%env(bool:COOKIE_SECURE)%'
             int $jwtTtl: '%env(int:JWT_TTL)%'
             string $mongoDatabase: '%env(MONGODB_DB)%'
