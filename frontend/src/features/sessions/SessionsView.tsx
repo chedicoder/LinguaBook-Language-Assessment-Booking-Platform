@@ -28,7 +28,7 @@ export function SessionsView() {
   const [newStartsAt, setNewStartsAt] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [newCapacity, setNewCapacity] = useState('');
-  const isAdmin = user?.roles.includes('ROLE_ADMIN') ?? false;
+  const isAdmin = user?.roles?.includes('ROLE_ADMIN') ?? false;
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
