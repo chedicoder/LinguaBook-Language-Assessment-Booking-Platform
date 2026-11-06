@@ -17,9 +17,12 @@ final class UserProvider implements UserProviderInterface
 
     public function loadUserByIdentifier(string $identifier): UserInterface
     {
-        $user = \MongoDB\BSON\ObjectId::isValid($identifier)
+        $isObjectId = preg_match('/^[a-f\d]{24}$/i', $identifier) === 1;
+
+        $user = $isObjectId
             ? $this->users->find($identifier)
             : $this->users->findByEmail($identifier);
+
         if ($user === null) {
             $exception = new UserNotFoundException('User not found.');
             $exception->setUserIdentifier($identifier);

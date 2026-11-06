@@ -18,10 +18,10 @@ class Reservation
     private ?string $id = null;
 
     #[ODM\Field(type: 'object_id')]
-    private ObjectId $sessionId;
+    private string $sessionId;
 
     #[ODM\Field(type: 'object_id')]
-    private ObjectId $userId;
+    private string $userId;
 
     #[ODM\Field(type: 'date_immutable')]
     private \DateTimeImmutable $reservedAt;
@@ -32,19 +32,42 @@ class Reservation
     #[ODM\Field(type: 'date_immutable', nullable: true)]
     private ?\DateTimeImmutable $cancelledAt = null;
 
-    public function __construct(ObjectId $sessionId, ObjectId $userId)
+    public function __construct(string $sessionId, string $userId)
     {
         $this->sessionId = $sessionId;
         $this->userId = $userId;
         $this->reservedAt = new \DateTimeImmutable();
     }
 
-    public function getId(): ?string { return $this->id; }
-    public function getSessionId(): string { return (string) $this->sessionId; }
-    public function getUserId(): string { return (string) $this->userId; }
-    public function getReservedAt(): \DateTimeImmutable { return $this->reservedAt; }
-    public function getStatus(): string { return $this->status; }
-    public function isActive(): bool { return $this->status === self::STATUS_ACTIVE; }
+    public function getId(): ?string
+    {
+        return $this->id;
+    }
+
+    public function getSessionId(): string
+    {
+        return $this->sessionId;
+    }
+
+    public function getUserId(): string
+    {
+        return $this->userId;
+    }
+
+    public function getReservedAt(): \DateTimeImmutable
+    {
+        return $this->reservedAt;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
 
     public function cancel(): void
     {

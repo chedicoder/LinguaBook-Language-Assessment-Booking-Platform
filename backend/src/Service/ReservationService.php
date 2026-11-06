@@ -11,6 +11,7 @@ use App\Repository\SessionRepository;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use MongoDB\Client;
 use MongoDB\Driver\Exception\BulkWriteException;
+use MongoDB\Driver\Exception\Exception as MongoException;
 use MongoDB\Driver\Session as MongoSession;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
@@ -26,9 +27,13 @@ final class ReservationService
     ) {
     }
 
+    private function isValidObjectId(string $id): bool
+    {
+        return preg_match('/^[a-f\d]{24}$/i', $id) === 1;
+    }
     public function reserve(User $user, string $sessionId): Reservation
     {
-        if ($user->getId() === null || !ObjectId::isValid($sessionId)) {
+        if ($user->getId() === null || !$this->isValidObjectId($sessionId)) {
             throw new ApiException(404, 'session_not_found', 'Session was not found.');
         }
 
@@ -102,7 +107,7 @@ final class ReservationService
 
     public function cancel(User $user, string $reservationId): void
     {
-        if ($user->getId() === null || !ObjectId::isValid($reservationId)) {
+        if ($user->getId() === null || !$this->isValidObjectId($reservationId)) {
             throw new ApiException(404, 'reservation_not_found', 'Reservation was not found.');
         }
 
@@ -151,11 +156,48 @@ final class ReservationService
         }
     }
 
+    
     private function runTransaction(MongoSession $session, callable $operation): void
     {
-        $session->withTransaction($operation, [
-            'readConcern' => new \MongoDB\Driver\ReadConcern(\MongoDB\Driver\ReadConcern::MAJORITY),
-            'writeConcern' => new \MongoDB\Driver\WriteConcern(\MongoDB\Driver\WriteConcern::MAJORITY),
-        ]);
+        $maxAttempts = 3;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            $session->startTransaction([
+                'readConcern' => new \MongoDB\Driver\ReadConcern(
+                    \MongoDB\Driver\ReadConcern::MAJORITY
+                ),
+                'writeConcern' => new \MongoDB\Driver\WriteConcern(
+                    \MongoDB\Driver\WriteConcern::MAJORITY
+                ),
+            ]);
+
+            try {
+                $operation($session);
+                $session->commitTransaction();
+
+                return;
+            } catch (MongoException $exception) {
+                if ($session->isInTransaction()) {
+                    $session->abortTransaction();
+                }
+
+                $isTransient =
+                    (method_exists($exception, 'hasErrorLabel')
+                        && $exception->hasErrorLabel('TransientTransactionError'))
+                    || $exception->getCode() === 112;
+
+                if (!$isTransient || $attempt === $maxAttempts) {
+                    throw $exception;
+                }
+
+                usleep(50_000 * $attempt);
+            } catch (\Throwable $exception) {
+                if ($session->isInTransaction()) {
+                    $session->abortTransaction();
+                }
+
+                throw $exception;
+            }
+        }
     }
 }

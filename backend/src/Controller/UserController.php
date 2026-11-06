@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Document\User;
 use App\DTO\AccountUpdateRequest;
 use App\Service\ApiResponder;
+use App\Service\ApiView;
 use App\Service\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -17,6 +18,7 @@ final class UserController extends AbstractController
 {
     public function __construct(
         private readonly UserService $users,
+        private readonly ApiView $view,
         private readonly ApiResponder $responder
     ) {
     }
@@ -40,7 +42,7 @@ final class UserController extends AbstractController
 
         $updatedUser = $this->users->update($user, $input);
 
-        return $this->responder->success($updatedUser);
+        return $this->responder->success(['user' => $this->view->user($updatedUser)]);
     }
 
     #[Route('', name: 'users_list', methods: ['GET'])]
@@ -90,10 +92,9 @@ final class UserController extends AbstractController
             throw new \InvalidArgumentException('Invalid JSON request body.');
         }
 
-        $input = new AccountUpdateRequest();
-        $input->name = $data['name'] ?? '';
-        $input->email = $data['email'] ?? '';
-
-        return $input;
+        return new AccountUpdateRequest(
+            name: $data['name'] ?? null,
+            email: $data['email'] ?? null,
+        );
     }
 }

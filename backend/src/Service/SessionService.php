@@ -69,7 +69,7 @@ final class SessionService
             'reservedCount' => ['$lte' => $input->capacity],
         ], ['$set' => [
             'language' => trim($input->language),
-            'startsAt' => $date,
+            'startsAt' => new UTCDateTime($date),
             'location' => trim($input->location),
             'capacity' => $input->capacity,
             'updatedAt' => new UTCDateTime(),

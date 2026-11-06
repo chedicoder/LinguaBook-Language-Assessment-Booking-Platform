@@ -38,14 +38,19 @@ final class UserService
     {
         $this->validator->validate($input);
 
-        $emailOwner = $this->users->findByEmail($input->email);
-
-        if ($emailOwner !== null && $emailOwner->getId() !== $user->getId()) {
-            throw new ApiException(409, 'email_in_use', 'An account with this email already exists.');
+        if ($input->name !== null) {
+            $user->rename($input->name);
         }
 
-        $user->rename($input->name);
-        $user->changeEmail($input->email);
+        if ($input->email !== null) {
+            $emailOwner = $this->users->findByEmail($input->email);
+
+            if ($emailOwner !== null && $emailOwner->getId() !== $user->getId()) {
+                throw new ApiException(409, 'email_in_use', 'An account with this email already exists.');
+            }
+
+            $user->changeEmail($input->email);
+        }
 
         $this->users->save($user);
 

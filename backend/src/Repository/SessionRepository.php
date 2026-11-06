@@ -5,6 +5,7 @@ namespace App\Repository;
 use App\Document\Session;
 use Doctrine\ODM\MongoDB\DocumentManager;
 use MongoDB\BSON\Regex;
+use MongoDB\BSON\UTCDateTime;
 
 final class SessionRepository
 {
@@ -12,9 +13,14 @@ final class SessionRepository
     {
     }
 
+    private function isValidObjectId(string $id): bool
+    {
+        return preg_match('/^[a-f\d]{24}$/i', $id) === 1;
+    }
+
     public function find(string $id): ?Session
     {
-        if (!\MongoDB\BSON\ObjectId::isValid($id)) {
+        if (!$this->isValidObjectId($id)) {
             return null;
         }
 
@@ -24,7 +30,7 @@ final class SessionRepository
 
     public function findIncludingArchived(string $id): ?Session
     {
-        if (!\MongoDB\BSON\ObjectId::isValid($id)) {
+        if (!$this->isValidObjectId($id)) {
             return null;
         }
 
@@ -44,22 +50,24 @@ final class SessionRepository
         string $direction
     ): array {
         $filter = ['archivedAt' => null];
+
         if ($language !== null && $language !== '') {
             $filter['language'] = new Regex('^'.preg_quote($language, '/').'$', 'i');
         }
 
         $range = [];
         if ($from !== null) {
-            $range['$gte'] = $from;
+            $range['$gte'] = new UTCDateTime($from);
         }
         if ($to !== null) {
-            $range['$lte'] = $to;
+            $range['$lte'] = new UTCDateTime($to);
         }
         if ($range !== []) {
             $filter['startsAt'] = $range;
         } elseif ($from === null && $to === null) {
-            $filter['startsAt'] = ['$gte' => new \DateTimeImmutable()];
+            $filter['startsAt'] = ['$gte' => new UTCDateTime(new \DateTimeImmutable())];
         }
+
         if ($available) {
             $filter['$expr'] = ['$lt' => ['$reservedCount', '$capacity']];
         }
@@ -70,6 +78,7 @@ final class SessionRepository
             'skip' => ($page - 1) * $limit,
             'limit' => $limit,
         ]);
+
         $items = [];
         foreach ($cursor as $row) {
             $session = $this->documents->getRepository(Session::class)->find((string) $row['_id']);
@@ -89,6 +98,6 @@ final class SessionRepository
 
     public function clearIdentityMap(): void
     {
-        $this->documents->clear(Session::class);
+        $this->documents->clear();
     }
 }
