@@ -1,0 +1,7 @@
+vendor
+var
+.env
+.env.dev
+.env.test
+config/jwt/*.pem
+.git

@@ -16,6 +16,34 @@ services:
       timeout: 10s
       retries: 20
       start_period: 5s
+  
+  backend:
+    build:
+      context: ./backend
+      target: development
+    env_file:
+      - ./backend/.env
+    environment:
+      APP_ENV: dev
+      MONGODB_URI: mongodb://mongodb:27017/?replicaSet=rs0
+      MONGODB_DB: ets_booking
+      COOKIE_SECURE: "false"
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - backend_vendor:/app/vendor
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1:8000/api/sessions') === false ? 1 : 0);"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    command: ["sh", "-c", "composer install --no-interaction && mkdir -p config/jwt && php bin/console lexik:jwt:generate-keypair --skip-if-exists && php bin/console app:database:ensure-indexes && php -S 0.0.0.0:8000 -t public public/index.php"]
 
 volumes:
   mongo_data:
+  backend_vendor:
