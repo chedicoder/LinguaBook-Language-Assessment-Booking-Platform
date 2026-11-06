@@ -28,6 +28,8 @@ services:
       MONGODB_URI: mongodb://mongodb:27017/?replicaSet=rs0
       MONGODB_DB: ets_booking
       COOKIE_SECURE: "false"
+      CORS_ALLOW_ORIGIN: '^https?://(localhost|127\.0\.0\.1|172\.31\.112\.175)(:[0-9]+)?$'
+
     ports:
       - "8000:8000"
     volumes:
