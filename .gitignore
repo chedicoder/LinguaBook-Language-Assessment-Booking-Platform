@@ -1,5 +1,10 @@
-/backend/.env.local
+/backend/.env.dev
+/backend/.env.test
 /backend/.env
 /backend/config/jwt/*.pem
 /backend/vendor/
 /backend/var/
+/frontend/.env
+/frontend/.next/
+/frontend/node_modules/
+/frontend/coverage/
