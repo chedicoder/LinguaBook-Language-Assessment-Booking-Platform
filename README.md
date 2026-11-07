@@ -351,14 +351,14 @@ Une fois connecté avec ce compte administrateur, accédez au panneau de gestion
 Exécuter la suite complète de tests PHPUnit :
 
 ```
-docker compose exec backend php bin/phpunit
+docker compose exec -e APP_ENV=test backend vendor/bin/phpunit
 
 ```
 
-Exécuter un fichier de test spécifique (ex: tests de concurrence) :
+Exécuter les tests d'intégrations (ex: tests de concurrence) :
 
 ```
-docker compose exec backend php bin/phpunit tests/Integration/ReservationConcurrencyTest.php
+docker compose exec -e APP_ENV=test backend vendor/bin/phpunit tests/Integration
 
 ```
 
