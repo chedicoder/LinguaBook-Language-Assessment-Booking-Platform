@@ -280,7 +280,7 @@ CORS_ALLOW_ORIGIN=^https?://(localhost|127\.0\.0\.1|SERVER_IP)(:[0-9]+)?$
 
 ```
 
-Remplacez `SERVER_IP` par l'adresse IP de la machine hébergeant l'application.
+Remplacez `SERVER_IP` par l'adresse IP de la machine hébergeant le service backend.
 *Exemple si l'IP du serveur est `192.168.1.50` :*
 
 ```
