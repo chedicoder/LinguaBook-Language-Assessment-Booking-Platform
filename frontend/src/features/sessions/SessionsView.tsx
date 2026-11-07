@@ -23,6 +23,7 @@ export function SessionsView() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [booking, setBooking] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [newLanguage, setNewLanguage] = useState('');
   const [newStartsAt, setNewStartsAt] = useState('');
@@ -102,6 +103,22 @@ export function SessionsView() {
     }
   }
 
+  async function deleteSession(session: TestSession) {
+    if (!window.confirm(`Delete the session ${session.language} on ${formatDate(session.startsAt)}?`)) return;
+    setDeleting(session.id);
+    setNotice('');
+    setError('');
+    try {
+      await api.delete(`/sessions/${session.id}`);
+      setNotice('The session was deleted successfully.');
+      await loadSessions();
+    } catch (reason) {
+      setError(getApiError(reason));
+    } finally {
+      setDeleting(null);
+    }
+  }
+
   return (
     <>
       <PageTitle eyebrow="Find your session" title="Upcoming test sessions" description="Browse available language test dates and locations." />
@@ -166,6 +183,16 @@ export function SessionsView() {
                 onClick={() => void book(session)}>
                 {booking === session.id ? 'Reserving…' : session.availablePlaces < 1 ? 'Full' : user ? 'Reserve a place' : 'Sign in to reserve'}
               </button>
+              {isAdmin && (
+                <button
+                  className="button button-danger"
+                  type="button"
+                  disabled={deleting === session.id}
+                  onClick={() => void deleteSession(session)}
+                >
+                  {deleting === session.id ? 'Deleting session…' : 'Delete session'}
+                </button>
+              )}
             </article>
           ))}
         </div>

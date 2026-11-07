@@ -6,7 +6,9 @@ import { api, apiData } from '@/lib/api';
 
 const mockPush = jest.fn();
 const mockGet = jest.mocked(api.get);
+const mockDelete = jest.mocked(api.delete);
 const mockApiData = jest.mocked(apiData);
+const mockRoles = ['ROLE_USER'];
 
 const testSession: TestSession = {
   id: 'session-1',
@@ -24,7 +26,7 @@ jest.mock('@/features/auth/AuthProvider', () => ({
       id: 'user-1',
       name: 'Alex',
       email: 'alex@example.com',
-      roles: ['ROLE_USER'],
+      roles: mockRoles,
     },
     refresh: jest.fn(),
   }),
@@ -35,7 +37,7 @@ jest.mock('next/navigation', () => ({
 }));
 
 jest.mock('@/lib/api', () => ({
-  api: { get: jest.fn() },
+  api: { get: jest.fn(), delete: jest.fn() },
   apiData: jest.fn(),
   getApiError: (error: Error) => error.message,
 }));
@@ -43,6 +45,7 @@ jest.mock('@/lib/api', () => ({
 describe('session listing', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockRoles.splice(0, mockRoles.length, 'ROLE_USER');
     window.confirm = jest.fn(() => true);
   });
 
@@ -107,6 +110,52 @@ describe('session listing', () => {
         'Your place is reserved.',
       ),
     );
+  });
+
+  it('allows admins to delete a session and refreshes the list', async () => {
+    mockRoles.push('ROLE_ADMIN');
+    mockGet
+      .mockResolvedValueOnce({
+        data: {
+          data: [testSession],
+          meta: { page: 1, limit: 10, total: 1, pages: 1 },
+          error: null,
+        },
+      } as never)
+      .mockResolvedValueOnce({
+        data: {
+          data: [],
+          meta: { page: 1, limit: 10, total: 0, pages: 0 },
+          error: null,
+        },
+      } as never);
+    mockDelete.mockResolvedValue({} as never);
+
+    render(<SessionsView />);
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete session' }));
+
+    expect(window.confirm).toHaveBeenCalledWith(
+      expect.stringContaining('Delete the session English'),
+    );
+    await waitFor(() => expect(mockDelete).toHaveBeenCalledWith('/sessions/session-1'));
+    expect(await screen.findByText('The session was deleted successfully.')).toBeInTheDocument();
+    expect(screen.queryByText('Paris')).not.toBeInTheDocument();
+  });
+
+  it('does not show the delete action to regular users', async () => {
+    mockGet.mockResolvedValue({
+      data: {
+        data: [testSession],
+        meta: { page: 1, limit: 10, total: 1, pages: 1 },
+        error: null,
+      },
+    } as never);
+
+    render(<SessionsView />);
+
+    await screen.findByText('English');
+    expect(screen.queryByRole('button', { name: 'Delete session' })).not.toBeInTheDocument();
   });
 
   it('shows a loading state and reports a session API error', async () => {
