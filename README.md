@@ -104,6 +104,52 @@ Développé avec **Next.js**, **React** et **TypeScript**.
 
 * Cohérence garantie par : des contraintes d'unicité (utilisateur/session), des mises à jour atomiques de capacité et des transactions MongoDB.
 
+---
+
+## 📊 Diagramme de Classes
+
+```mermaid
+classDiagram
+    class User {
+        +string id
+        +string name
+        +string email
+        +string password
+        +array roles
+        +DateTime createdAt
+        +rename(name)
+        +changeEmail(email)
+        +getId()
+    }
+
+    class Session {
+        +string id
+        +string language
+        +DateTime startsAt
+        +string location
+        +int capacity
+        +int reservedCount
+        +DateTime createdAt
+        +DateTime updatedAt
+        +DateTime archivedAt
+        +hasAvailablePlaces()
+    }
+
+    class Reservation {
+        +string id
+        +string userId
+        +string sessionId
+        +string status
+        +DateTime reservedAt
+        +DateTime cancelledAt
+    }
+
+    User "1" --> "0..*" Reservation : makes
+    Session "1" --> "0..*" Reservation : receives
+```
+
+---
+
 ## 🔒 Sécurité et Fiabilité
 
 * Authentification JWT stockée dans des cookies HTTP-only.
