@@ -1,5 +1,3 @@
-/backend/.env.dev
-/backend/.env.test
 /backend/.env
 /backend/config/jwt/*.pem
 /backend/vendor/
