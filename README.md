@@ -351,14 +351,14 @@ Une fois connecté avec ce compte administrateur, accédez au panneau de gestion
 Exécuter la suite complète de tests PHPUnit :
 
 ```
-docker compose exec -e APP_ENV=test backend vendor/bin/phpunit
+docker compose exec -e APP_ENV=test -e MONGODB_DB=ets_booking_test backend vendor/bin/phpunit
 
 ```
 
 Exécuter les tests d'intégrations (ex: tests de concurrence) :
 
 ```
-docker compose exec -e APP_ENV=test backend vendor/bin/phpunit tests/Integration
+docker compose exec -e APP_ENV=test -e MONGODB_DB=ets_booking_test backend vendor/bin/phpunit tests/Integration
 
 ```
 
