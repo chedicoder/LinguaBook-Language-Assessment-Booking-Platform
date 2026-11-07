@@ -222,7 +222,7 @@ ets-language-booking/
 
 ```
 git clone https://github.com/chedicoder/LinguaBook-Language-Assessment-Booking-Platform.git
-cd ets-language-booking
+cd LinguaBook-Language-Assessment-Booking-Platform
 
 ```
 
