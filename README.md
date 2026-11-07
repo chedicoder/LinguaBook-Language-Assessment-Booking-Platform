@@ -391,6 +391,14 @@ docker compose exec frontend npm test -- --runInBand
 
 * Protection des pages.
 
+## 🌐 **Accès à l'application web :**
+Une fois les conteneurs démarrés et les tests sont exécutés avec succès, ouvrez votre navigateur et accédez à l'interface frontend :
+```text
+http://localhost:3000
+```
+*(Remplacez `localhost` par l'adresse IP de votre serveur frontend, par exemple `http://192.168.1.50:3000`).*
+
+
 ## 📄 Licence
 
 Ce projet est propriétaire. Tous droits réservés.
