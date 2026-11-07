@@ -221,7 +221,7 @@ ets-language-booking/
 ### 1. Cloner le dépôt
 
 ```
-git clone <REPOSITORY_URL>
+git clone https://github.com/chedicoder/LinguaBook-Language-Assessment-Booking-Platform.git
 cd ets-language-booking
 
 ```
