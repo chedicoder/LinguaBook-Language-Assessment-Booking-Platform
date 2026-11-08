@@ -322,7 +322,7 @@ docker compose up -d --build
 
 ```
 
-### 4. Création d'un compte Administrateur
+### 4. Création d'un compte Administrateur & Gestion des sessions de test
 
 Pour pouvoir ajouter et gérer les sessions de test, vous devez créer un compte administrateur via la commande suivante :
 
